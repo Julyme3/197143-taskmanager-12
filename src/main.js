@@ -310,9 +310,7 @@ const createLoadMoreBtnTemplate = () =>
   `<button class="load-more" type="button">load more</button>`
 ;
 
-const render = (container, template, place) => {
-  container.insertAdjacentHTML(place, template);
-};
+const render = (container, template, place) => container.insertAdjacentHTML(place, template);
 
 const mainElement = document.querySelector(`.main`);
 const headerElement = mainElement.querySelector(`.main__control`);
