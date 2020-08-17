@@ -1,4 +1,4 @@
-import {isTaskExpired, isTaskRepeating, isTaskExpiredToday} from "../utils";
+import {isTaskExpired, isTaskRepeating, isTaskExpiredToday} from "../utils/task";
 
 const isNotArchiveTask = (task) => {
   return !task.isArchive;

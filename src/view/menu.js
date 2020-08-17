@@ -1,10 +1,6 @@
-import {createElement} from "../utils";
+import AbstractView from "./abstract";
 
-export default class Menu {
-
-  constructor() {
-    this._element = null;
-  }
+export default class Menu extends AbstractView {
 
   createTemplate() {
     return `<section class="control__btn-wrap">
@@ -30,16 +26,5 @@ export default class Menu {
 
   getTemplate() {
     return this.createTemplate();
-  }
-
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
   }
 }

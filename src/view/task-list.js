@@ -1,10 +1,6 @@
-import {createElement} from "../utils";
+import AbstractView from "./abstract";
 
-export default class TaskList {
-
-  constructor() {
-    this._element = null;
-  }
+export default class TaskList extends AbstractView {
 
   createTemplate() {
     return `<div class="board__tasks"></div>`;
@@ -12,16 +8,5 @@ export default class TaskList {
 
   getTemplate() {
     return this.createTemplate();
-  }
-
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
   }
 }
