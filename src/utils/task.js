@@ -1,6 +1,6 @@
 
 const isTaskRepeating = (repeating) => {
-  return Object.values(repeating).some(Boolean);// возвращаем false даже если 1 день без повторения (т.е. false)
+  return Object.values(repeating).some(Boolean); // возвращаем false даже если 1 день без повторения (т.е. false)
 };
 
 const getCurrentDate = () => {
@@ -25,4 +25,39 @@ const isTaskExpiredToday = (dueDate) => {
   return currentDate.getTime() === dueDate.getTime();
 };
 
-export {isTaskExpired, isTaskRepeating, isTaskExpiredToday};
+// таски без дат дедлайна ставим в конец списка
+const getWeightForNullDate = (dateA, dateB) => {
+
+  if (dateA.dueDate === null && dateB.dueDate === null) {
+    return 0;
+  }
+  if (dateA.dueDate === null) {
+    return 1;
+  }
+  if (dateB.dueDate === null) {
+    return -1;
+  }
+
+  return null;
+};
+
+const sortByDateUp = (dateA, dateB) => {
+  const weight = getWeightForNullDate(dateA, dateB);
+
+  if (weight !== null) {
+    return weight;
+  }
+
+  return dateA.dueDate.getTime() - dateB.dueDate.getTime();
+};
+
+const sortByDateDown = (dateA, dateB) => {
+  const weight = getWeightForNullDate(dateA, dateB);
+
+  if (weight !== null) {
+    return weight;
+  }
+  return dateB.dueDate.getTime() - dateA.dueDate.getTime();
+};
+
+export {isTaskExpired, isTaskRepeating, isTaskExpiredToday, sortByDateUp, sortByDateDown};
