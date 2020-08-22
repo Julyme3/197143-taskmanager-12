@@ -1,6 +1,9 @@
 import {COLORS} from "../const";
 import {getRandomInteger} from "../utils/common";
 
+
+const generateId = () => Date.now() + parseInt(Math.random() * 10000, 10);
+
 const generateDescription = () => {
   const description = [
     `Изучить теорию`,
@@ -65,6 +68,7 @@ const generateTask = () => {
     color: generateColor(),
     isFavorite: Boolean(getRandomInteger(0, 1)),
     isArchive: Boolean(getRandomInteger(0, 1)),
+    id: generateId(),
   };
 };
 export {generateTask};

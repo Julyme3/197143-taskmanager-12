@@ -60,4 +60,18 @@ const sortByDateDown = (dateA, dateB) => {
   return dateB.dueDate.getTime() - dateA.dueDate.getTime();
 };
 
-export {isTaskExpired, isTaskRepeating, isTaskExpiredToday, sortByDateUp, sortByDateDown};
+// функция обновления элемента-задачи
+const updateItem = (items, updatedItem) => {
+  const idx = items.findIndex((item) => item.id === updatedItem.id);
+  if (idx === -1) {
+    return items;
+  }
+
+  return [
+    ...items.slice(0, idx),
+    updatedItem,
+    ...items.slice(idx + 1)
+  ];
+};
+
+export {isTaskExpired, isTaskRepeating, isTaskExpiredToday, sortByDateUp, sortByDateDown, updateItem};
