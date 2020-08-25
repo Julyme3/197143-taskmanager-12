@@ -15,7 +15,7 @@ export default class Task extends AbstractView {
   createTemplate(task) {
     const {color, description, dueDate, isFavorite, isArchive, repeatingDays} = task;
     const date = dueDate !== null
-      ? formattedDate(dueDate, {days: `numeric`, month: `long`})
+      ? formattedDate(dueDate, `D MMMM`)
       : ``;
     const dueDateclassName = isTaskExpired(dueDate) ? `card--deadline` : ``;
     const favoriteClassNameDisable = isFavorite ? `card__btn--disabled` : ``;
