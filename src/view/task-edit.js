@@ -1,7 +1,7 @@
-import AbstractView from "./abstract";
+import SmartView from "./smart";
 import {COLORS} from "../const";
 import {formattedDate} from "../utils/common";
-import {isTaskRepeating, isTaskExpired} from "../utils/task";
+import {isTaskRepeating} from "../utils/task";
 
 const DEFAULT_TASK = {
   color: COLORS[0],
@@ -18,20 +18,27 @@ const DEFAULT_TASK = {
   },
 };
 
-export default class TaskEdit extends AbstractView {
+export default class TaskEdit extends SmartView {
 
   constructor(task = DEFAULT_TASK) {
     super();
-    this._task = task;
+    this._data = TaskEdit.parseTaskToData(task);
     this._formSubmitHandler = this._formSubmitHandler.bind(this);
+    this._dueDateToggleHandler = this._dueDateToggleHandler.bind(this);
+    this._repeatingToggleHandler = this._repeatingToggleHandler.bind(this);
+    this._descriptionInputHandler = this._descriptionInputHandler.bind(this);
+    this._colorChangeHandler = this._colorChangeHandler.bind(this);
+    this._repeatingChangeHandler = this._repeatingChangeHandler.bind(this);
+
+    this._setInnerHandlers();
   }
 
-  createDateTemplate(dueDate) {
+  createDateTemplate(dueDate, isDueDate) {
     return `<button class="card__date-deadline-toggle" type="button">
-        date: <span class="card__date-status">${dueDate !== null ? `yes` : `no`}</span>
+        date: <span class="card__date-status">${isDueDate ? `yes` : `no`}</span>
       </button>
 
-      ${dueDate !== null ? `<fieldset class="card__date-deadline">
+      ${isDueDate ? `<fieldset class="card__date-deadline">
         <label class="card__input-deadline-wrap">
           <input
             class="card__date"
@@ -44,72 +51,23 @@ export default class TaskEdit extends AbstractView {
     ;
   }
 
-  createRepeatingTemplate(repeating) {
+  createRepeatingTemplate(repeating, isRepeating) {
     return `<button class="card__repeat-toggle" type="button">
-        repeat:<span class="card__repeat-status">${isTaskRepeating(repeating) ? `yes` : `no`}</span>
+        repeat:<span class="card__repeat-status">${isRepeating ? `yes` : `no`}</span>
       </button>
-
-      ${isTaskRepeating(repeating) ? `<fieldset class="card__repeat-days">
+      ${isRepeating ? `<fieldset class="card__repeat-days">
         <div class="card__repeat-days-inner">
-          <input
+          ${Object.entries(repeating).map(([day, repeat]) => `<input
             class="visually-hidden card__repeat-day-input"
             type="checkbox"
-            id="repeat-mo-4"
+            id="repeat-${day}"
             name="repeat"
-            value="mo"
+            value="${day}"
+            ${repeat ? `checked` : ``}
           />
-          <label class="card__repeat-day" for="repeat-mo-4">mo</label>
-          <input
-            class="visually-hidden card__repeat-day-input"
-            type="checkbox"
-            id="repeat-tu-4"
-            name="repeat"
-            value="tu"
-            checked=""
-          />
-          <label class="card__repeat-day" for="repeat-tu-4">tu</label>
-          <input
-            class="visually-hidden card__repeat-day-input"
-            type="checkbox"
-            id="repeat-we-4"
-            name="repeat"
-            value="we"
-          />
-          <label class="card__repeat-day" for="repeat-we-4">we</label>
-          <input
-            class="visually-hidden card__repeat-day-input"
-            type="checkbox"
-            id="repeat-th-4"
-            name="repeat"
-            value="th"
-          />
-          <label class="card__repeat-day" for="repeat-th-4">th</label>
-          <input
-            class="visually-hidden card__repeat-day-input"
-            type="checkbox"
-            id="repeat-fr-4"
-            name="repeat"
-            value="fr"
-            checked=""
-          />
-          <label class="card__repeat-day" for="repeat-fr-4">fr</label>
-          <input
-            class="visually-hidden card__repeat-day-input"
-            type="checkbox"
-            name="repeat"
-            value="sa"
-            id="repeat-sa-4"
-          />
-          <label class="card__repeat-day" for="repeat-sa-4">sa</label>
-          <input
-            class="visually-hidden card__repeat-day-input"
-            type="checkbox"
-            id="repeat-su-4"
-            name="repeat"
-            value="su"
-            checked=""
-          />
-          <label class="card__repeat-day" for="repeat-su-4">su</label>
+          <label class="card__repeat-day" for="repeat-${day}"
+            >${day}</label
+          >`).join(``)}
         </div>
       </fieldset>` : ``}`
     ;
@@ -128,18 +86,16 @@ export default class TaskEdit extends AbstractView {
     `).join(``);
   }
 
-  createTemplate(task) {
-    const {color, description, dueDate, repeatingDays} = task;
-    const dateTemplate = this.createDateTemplate(dueDate);
-    const repeatingTemplate = this.createRepeatingTemplate(repeatingDays);
+  createTemplate(data) {
+    const {color, description, dueDate, repeatingDays, isDueDate, isRepeating} = data;
+    const dateTemplate = this.createDateTemplate(dueDate, isDueDate);
+    const repeatingTemplate = this.createRepeatingTemplate(repeatingDays, isRepeating);
     const colorsTemplate = this.createColorsTemplate(color);
 
-    const dueDateclassName = isTaskExpired(dueDate) ? `card--deadline` : ``;
-    const repeateClassName = isTaskRepeating(repeatingDays)
-      ? `card--repeat`
-      : ``;
+    const repeateClassName = isRepeating ? `card--repeat` : ``;
+    const isSubmitDisabled = isRepeating && !isTaskRepeating(repeatingDays);
 
-    return `<article class="card card--edit card--${color} ${dueDateclassName} ${repeateClassName}">
+    return `<article class="card card--edit card--${color} ${repeateClassName}">
         <form class="card__form" method="get">
           <div class="card__inner">
             <div class="card__color-bar">
@@ -174,7 +130,7 @@ export default class TaskEdit extends AbstractView {
             </div>
 
             <div class="card__status-btns">
-              <button class="card__save" type="submit">save</button>
+              <button class="card__save" type="submit" ${isSubmitDisabled ? `disabled` : ``}>save</button>
               <button class="card__delete" type="button">delete</button>
             </div>
           </div>
@@ -184,16 +140,114 @@ export default class TaskEdit extends AbstractView {
   }
 
   getTemplate() {
-    return this.createTemplate(this._task);
+    return this.createTemplate(this._data);
   }
 
   _formSubmitHandler(evt) {
     evt.preventDefault();
-    this._callback.formSubmit();
+    this._callback.formSubmit(TaskEdit.parceDataToTask(this._data)); // передаем данные формы редактирования
+  }
+
+  _dueDateToggleHandler(evt) {
+    evt.preventDefault();
+    this.updateData({
+      isDueDate: !this._data.isDueDate,
+      isRepeating: !this._data.isDueDate && false
+    });
+  }
+
+  _repeatingToggleHandler(evt) {
+    evt.preventDefault();
+    this.updateData({
+      isRepeating: !this._data.isRepeating,
+      isDueDate: !this._data.isRepeating && false
+    });
+  }
+
+  _descriptionInputHandler(evt) {
+    evt.preventDefault();
+    this.updateData({
+      description: evt.target.value
+    }, true);
+
+  }
+
+  _colorChangeHandler(evt) {
+    evt.preventDefault();
+    this.updateData({
+      color: evt.target.value
+    });
+  }
+
+  _repeatingChangeHandler(evt) {
+    evt.preventDefault();
+    this.updateData({
+      repeatingDays: Object.assign({},
+          this._data.repeatingDays,
+          {
+            [evt.target.value]: evt.target.checked
+          }
+      )
+    });
   }
 
   setFormSubmitHandler(callback) {
     this._callback.formSubmit = callback;
     this.getElement().querySelector(`form`).addEventListener(`submit`, this._formSubmitHandler);
+  }
+
+  static parseTaskToData(task) {
+    return Object.assign({},
+        task,
+        {
+          isDueDate: task.dueDate !== null,
+          isRepeating: isTaskRepeating(task.repeatingDays)
+        }
+    );
+  }
+
+  static parceDataToTask(data) {
+    data = Object.assign({}, data);
+
+    if (!data.isDueDate) {
+      data.dueDate = null;
+    }
+
+    if (!data.isRepeating) {
+      data.repeatingDays = {
+        mo: false,
+        tu: false,
+        we: false,
+        th: false,
+        fr: false,
+        sa: false,
+        su: false
+      };
+    }
+
+    delete data.isDueDate;
+    delete data.isRepeating;
+
+    return data;
+  }
+
+  restoreHandlers() {
+    this._setInnerHandlers();
+    this.setFormSubmitHandler(this._callback.formSubmit); // восстанавливаем колбэк
+  }
+
+  _setInnerHandlers() { // внутренние обработчики
+    this.getElement().querySelector(`.card__date-deadline-toggle`).addEventListener(`click`, this._dueDateToggleHandler);
+    this.getElement().querySelector(`.card__repeat-toggle`).addEventListener(`click`, this._repeatingToggleHandler);
+    this.getElement().querySelector(`.card__text`).addEventListener(`input`, this._descriptionInputHandler);
+    this.getElement().querySelector(`.card__colors-wrap`).addEventListener(`change`, this._colorChangeHandler);
+
+    if (this._data.isRepeating) {
+      this.getElement().querySelector(`.card__repeat-days-inner`).addEventListener(`change`, this._repeatingChangeHandler);
+    }
+  }
+
+  reset(task) {
+    this.updateData(TaskEdit.parseTaskToData(task));
   }
 }
