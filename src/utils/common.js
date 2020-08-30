@@ -1,4 +1,11 @@
-const formattedDate = (date, options) => date.toLocaleString(`en-US`, {day: options.days, month: options.month});
+import moment from "moment";
+
+const formattedDate = (date, options) => {
+  if (!(date instanceof Date)) {
+    return ``;
+  }
+  return moment(date).format(options);
+};
 
 const getRandomInteger = (a = 0, b = 1) => {
   const lower = Math.ceil(Math.min(a, b));
